@@ -150,7 +150,7 @@ curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -d 'client_id=
 create a test topic
 
 Use the JWT from above  
-Do not forget to adapt the cluster REST Endpoint and Cluster ID before !
+Do not forget to adapt the cluster REST Endpoint and Cluster ID as well !
 
 ```bash
    curl \
