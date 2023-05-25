@@ -12,13 +12,13 @@
 
 ### Create Azure AD tenant for testing (optional) 
 
-Create a seperate tenant for testing purposes or use and existing what fits your need best.
-   ![tenant01.png](assets/tenant01.png)
+Create a seperate tenant for testing purposes or use and existing what fits your need best.  
+   ![tenant01.png](assets/tenant01.png)  
    ![tenant02.png](assets/tenant02.png)
 
-### Create App Registration
+### Create App Registration  
 
-Navigate to the newly created tenant, should look similar to
+Navigate to the newly created tenant, should look similar to  
        ![tenant03.png](assets/tenant03.png)
 
 
@@ -31,7 +31,7 @@ Choose a proper name leave everything else to its defaults and click register.
        ![appreg02.png](assets/appreg02.png)
 
 
-After the registrtration, the application will be assigned an ID
+After the registrtration, the application will be assigned an ID  
        ![appreg03.png](assets/appreg03.png)
 
 Switch to certificates and & secrets on the navigation pane and create a new client secret.  
@@ -42,15 +42,15 @@ Do not forget to copy the secrets as they will be hidden soon.
 
 
 Now we have to switch to "Expose an API" to set appliaction URL.  
-       ![api01.png](assets/api01.png)
-just keep the default and click "save"
+       ![api01.png](assets/api01.png)  
+just keep the default and click "save"  
        ![api02.png](assets/api02.png)
 
 
 To ensure that Azure AD returns version 2 token we need to do a small change in the Manifest.
 
 Click on "Manifest" in the left-hand bar and look for ```accessTokenAcceptedVersion``` in the Manifest.
-By default the value is ```null``` which should be changed to ```2```
+By default the value is ```null``` which should be changed to ```2```  
        ![manifest01.png](assets/manifest01.png)
 
 Do not forgot to ```save``` your changes ;-)
@@ -112,10 +112,10 @@ Let's configure the Confluent Cloud part
 Login to https://confluent.cloud and go to **Accounts & access** in the burger menu in the top right
 and select **Identity providers** tab
 
-Select **Add provider** 
+Select **Add provider**   
        ![provider01.png](assets/provider01.png)
 
-Choose Azure AD then press Next
+Choose Azure AD then press Next  
        ![provider02.png](assets/provider02.png)
 
 In the next screen, enter a name for this provider, a description of the provider, and the Tenant ID (get if from the overview pane) from Azure. 
@@ -124,7 +124,7 @@ Pressing the "Import from Tenant ID" button will populate the Issuer and JWKS UR
 
 
 As the provider is created we have to create the Identity Pools.
-Click on the new provider.
+Click on the new provider.  
        ![provider04.png](assets/provider04.png)
 
 
@@ -137,3 +137,26 @@ The filter specifies which identities will be included in this pool by inspectin
 The next step is to assign permission to the identity pool using RBAC. "Import permissions" will apply the RBAC permissions of an existing service account. "Add new permissions" will allow new role bindings to be applied to this Identity Pool.  
        ![ip01.png](assets/ip01.png)
 
+
+### Test Authentication via REST calls
+
+
+get a new JWT
+
+```bash
+curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -d 'client_id=5172d8ab-3278-418a-ac65-a70edf7a7211&scope=api://5172d8ab-3278-418a-ac65-a70edf7a7211/.default&client_secret=Lez8Q~Ed1wNZm6i6K9vuRBdrYykocIu3DvbqtbII&grant_type=client_credentials' 'https://login.microsoftonline.com/cf91a0a7-813e-42d3-9f6b-a0cda8062713/oauth2/v2.0/token'
+```
+
+create a test topic
+
+Use the JWT from above  
+Do not forget to adapt the cluster REST Endpoint and Cluster ID before !
+
+```bash
+   curl \
+    -X POST \
+    -H "Content-Type: application/json" \
+    -H "Confluent-Identity-Pool-Id: pool-54E3" \
+    -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6Ii1LSTNROW5OUjdiUm9meG1lWm9YcWJIWkdldyJ9.eyJhdWQiOiI1MTcyZDhhYi0zMjc4LTQxOGEtYWM2NS1hNzBlZGY3YTcyMTEiLCJpc3MiOiJodHRwczovL2xvZ2luLm1pY3Jvc29mdG9ubGluZS5jb20vY2Y5MWEwYTctODEzZS00MmQzLTlmNmItYTBjZGE4MDYyNzEzL3YyLjAiLCJpYXQiOjE2ODUwMjcyNjUsIm5iZiI6MTY4NTAyNzI2NSwiZXhwIjoxNjg1MDMxMTY1LCJhaW8iOiJFMlpnWU9CODFIUGNpdC8rcmVYYnFRZVpYUlRpendpVzdBL3Q5anA3K2lvYjQ1eUU4eFVBIiwiYXpwIjoiNTE3MmQ4YWItMzI3OC00MThhLWFjNjUtYTcwZWRmN2E3MjExIiwiYXpwYWNyIjoiMSIsIm9pZCI6IjA4M2NmMDc5LTBiODUtNDA4MC04OGI2LTU0ODgzZmZiYjMzOSIsInJoIjoiMC5BVXNBcDZDUnp6NkIwMEtmYTZETnFBWW5FNnZZY2xGNE1vcEJyR1duRHQ5NmNoRkxBQUEuIiwic3ViIjoiMDgzY2YwNzktMGI4NS00MDgwLTg4YjYtNTQ4ODNmZmJiMzM5IiwidGlkIjoiY2Y5MWEwYTctODEzZS00MmQzLTlmNmItYTBjZGE4MDYyNzEzIiwidXRpIjoiT3Y5dlQ5bWtlMDYtT0stTnZpZVlBQSIsInZlciI6IjIuMCJ9.FexoYuunRK1QA3cdpCymgQ9sTkmngzn0Bl816aU87v1R2dCmjYOz39YARt4lrUlCGSAvmqccJZzfSD14JDpYPFAyvLdQlRSFOy1llLaYtboUVDBlKv8lyh5RgDfM80e7CTem0_VBw8hYpj-Zvh2qH4O6ROf6MdOZUulo2ztaW_8AG-BNyYY4aEdWG-enuWs67cytXq1n9TqAXRoqSa6KBmGVeLbBzSOwDEZKVFPzmE-_S0HGEj8QGvCrJ91r2P5OE6_4G2To2ylRKA-CgllUUvVO_IZ7Aqxar8XUx3JL3KjR81UByAmt84o8Ysvc1SUWei_QpSN9-XGzdBGwDJB7rw" \
+    https://pkc-ron87.germanywestcentral.azure.confluent.cloud:443/kafka/v3/clusters/lkc-2rp551/topics \
+    -d '{"topic_name":"topic-test"}' 
